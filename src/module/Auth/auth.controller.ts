@@ -15,4 +15,14 @@ export class AuthController {
   userSignUp(@Req() req: Request, @Res() res: Response): any {
     return this.userService.userSignUp(req, res);
   }
+
+  @Post('/forgot-password-request')
+  userForgotPasswordRequest(@Req() req: Request, @Res() res: Response): any {
+    return this.userService.userForgotPasswordRequest(req, res);
+  }
+
+  @Post('/password-change')
+  userPasswordChange(@Req() req: Request, @Res() res: Response): any {
+    return this.userService.userPasswordChange(req, res);
+  }
 }

@@ -1,17 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { LoginDto, signUpDto } from './auth.dto';
+import {
+  forgotPasswordRequestDto,
+  LoginDto,
+  PasswordChangeDto,
+  signUpDto,
+} from './auth.dto';
 import { EntityManager } from 'typeorm';
 import { UserRole } from './auth.enum';
 import * as bcrypt from 'bcrypt';
 import { AuthCommonServices } from 'src/common/services/auth.common.service';
 import { globalDtoHandler } from 'src/common/validation/dtoHandler.validation';
+import { generateOtp } from 'src/utils/generators/OtpGenerator';
+import { OtpMailService } from 'src/common/notifications/OtpNotification';
 
 @Injectable()
 export class AuthService {
   constructor(
     private entityManager: EntityManager, // Inject EntityManager for raw SQL queries
     private readonly AuthCommonServices: AuthCommonServices,
+    private readonly OtpMailService: OtpMailService,
   ) {}
 
   async userSignUp(req: Request, res: Response): Promise<Response> {
@@ -115,6 +123,95 @@ export class AuthService {
       });
     } catch (error) {
       console.error('Login error --->', error);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Internal server error, please try again later.',
+      });
+    }
+  }
+
+  async userForgotPasswordRequest(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    const body = req.body;
+
+    // Transform body into an instance of AuthDto and validate it
+    const AuthDto = await globalDtoHandler(forgotPasswordRequestDto, body, res);
+    if (AuthDto) {
+      return AuthDto;
+    }
+
+    const OTP = generateOtp();
+
+    try {
+      await this.OtpMailService.sendEmail(
+        body.email,
+        'Eventra Forgot Password',
+        OTP,
+      );
+      await this.entityManager.query(
+        'INSERT INTO "otp_validation" (email, otp) VALUES ($1, $2) ON CONFLICT (email) DO UPDATE SET otp = EXCLUDED.otp RETURNING *',
+        [body.email, OTP],
+      );
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'OTP send successfully',
+      });
+    } catch (error) {
+      console.error('send OTP error --->', error);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Internal server error, please try again later.',
+      });
+    }
+  }
+
+  async userPasswordChange(req: Request, res: Response): Promise<Response> {
+    const body = req.body;
+
+    // Transform body into an instance of AuthDto and validate it
+    const PasswordDto = await globalDtoHandler(PasswordChangeDto, body, res);
+    if (PasswordDto) {
+      return PasswordDto;
+    }
+
+    try {
+      const sendOtpData = await this.entityManager.query(
+        'SELECT otp FROM "otp_validation" WHERE email = $1',
+        [body.email],
+      );
+
+      if (!sendOtpData) {
+        return res.status(500).json({
+          status: 'error',
+          message: 'Otp expired, please resend OTP',
+        });
+      }
+
+      if (sendOtpData[0].otp != body.otp) {
+        return res.status(500).json({
+          status: 'error',
+          message: 'Mismatch OTP',
+        });
+      }
+
+      // 2. Hash the password before inserting into DB
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(body.password, salt);
+
+      await this.entityManager.query(
+        'UPDATE "User" SET password = $2 WHERE email = $1',
+        [body.email, hashedPassword],
+      );
+
+      return res.status(500).json({
+        status: 'success',
+        message: 'Validation successfully',
+      });
+    } catch (error) {
+      console.error('Password Change error --->', error);
       return res.status(500).json({
         status: 'error',
         message: 'Internal server error, please try again later.',

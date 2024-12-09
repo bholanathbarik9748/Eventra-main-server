@@ -14,7 +14,7 @@ async function mainApp() {
     allowedHeaders: 'Content-Type, Authorization',
   });
 
-  await app.listen(3000);
+  await app.listen(4000);
 }
 
 mainApp();

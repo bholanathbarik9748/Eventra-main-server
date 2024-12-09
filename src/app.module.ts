@@ -11,6 +11,7 @@ import { AuthController } from './module/Auth/auth.controller';
 import { AppService } from './app.service';
 import { AuthService } from './module/Auth/auth.service';
 import { AuthCommonServices } from './common/services/auth.common.service';
+import { OtpMailService } from './common/notifications/OtpNotification';
 
 @Module({
   imports: [
@@ -35,6 +36,6 @@ import { AuthCommonServices } from './common/services/auth.common.service';
     }), // Make JwtService available to the app
   ],
   controllers: [AppController, AuthController], // Register controllers
-  providers: [AppService, AuthService, AuthCommonServices], // Register services
+  providers: [AppService, AuthService, AuthCommonServices, OtpMailService], // Register services
 })
 export class AppModule {}

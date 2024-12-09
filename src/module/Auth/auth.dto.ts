@@ -15,9 +15,26 @@ export class signUpDto {
   email: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   password: string;
 
   @IsEnum(UserRole)
   role: UserRole;
+}
+
+export class forgotPasswordRequestDto {
+  @IsEmail()
+  email: string;
+}
+
+export class PasswordChangeDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @IsString()
+  otp: string;
 }
