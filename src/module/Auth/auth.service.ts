@@ -87,6 +87,17 @@ export class AuthService {
         });
       }
 
+      // Compare password
+      const isMatch = await bcrypt.compare(
+        body.password,
+        existingUser.password,
+      );
+      if (!isMatch) {
+        return res.status(400).json({
+          status: 'success',
+          message: 'Invalid email or password',
+        });
+      }
       const access_token = await this.AuthCommonServices.generateJwtToke({
         email: existingUser.email,
         id: existingUser.id,
@@ -94,6 +105,8 @@ export class AuthService {
         role: existingUser.role,
       });
 
+      // delete password from existingUser
+      delete existingUser.password;
       return res.status(200).json({
         status: 'success',
         message: 'User Login successfully',
@@ -101,7 +114,7 @@ export class AuthService {
         access_token,
       });
     } catch (error) {
-      console.error('Login error', error);
+      console.error('Login error --->', error);
       return res.status(500).json({
         status: 'error',
         message: 'Internal server error, please try again later.',
