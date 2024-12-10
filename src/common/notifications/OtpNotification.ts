@@ -28,7 +28,6 @@ export class OtpMailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions);
-      console.log('Email sent: ' + info.response);
       return info;
     } catch (error) {
       console.error('Error sending email:', error);

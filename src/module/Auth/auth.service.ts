@@ -1,16 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { Request, Response } from 'express';
 import {
-  forgotPasswordRequestDto,
-  LoginDto,
-  PasswordChangeDto,
-  signUpDto,
-} from './auth.dto';
+  ConflictException,
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { OtpDto, LoginDto, PasswordChangeDto, SignUpDto } from './auth.dto';
 import { EntityManager } from 'typeorm';
 import { UserRole } from './auth.enum';
 import * as bcrypt from 'bcrypt';
 import { AuthCommonServices } from 'src/common/services/auth.common.service';
-import { globalDtoHandler } from 'src/common/validation/dtoHandler.validation';
 import { generateOtp } from 'src/utils/generators/OtpGenerator';
 import { OtpMailService } from 'src/common/notifications/OtpNotification';
 
@@ -18,81 +17,60 @@ import { OtpMailService } from 'src/common/notifications/OtpNotification';
 export class AuthService {
   constructor(
     private entityManager: EntityManager, // Inject EntityManager for raw SQL queries
-    private readonly AuthCommonServices: AuthCommonServices,
+    private readonly authCommonServices: AuthCommonServices,
     private readonly OtpMailService: OtpMailService,
   ) {}
 
-  async userSignUp(req: Request, res: Response): Promise<Response> {
-    const body = req.body;
-
-    // Transform body into an instance of AuthDto and validate it
-    const AuthDto = await globalDtoHandler(signUpDto, body, res);
-    if (AuthDto) {
-      return AuthDto;
-    }
-
+  async userSignUp(
+    body: SignUpDto,
+  ): Promise<{ user: any; access_token: string }> {
     try {
-      const existingUser = await this.AuthCommonServices.checkUserExistByEmail(
+      // Check if user already exists
+      const existingUser = await this.authCommonServices.checkUserExistByEmail(
         body.email,
       );
-
-      if (existingUser.email) {
-        return res.status(409).json({
-          status: 'error',
-          message: 'User Already Exist !',
-        });
+      if (existingUser) {
+        throw new UnauthorizedException('User already exists!');
       }
 
-      // 2. Hash the password before inserting into DB
+      // Hash the password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(body.password, salt);
 
-      const response = await this.entityManager.query(
-        'INSERT INTO "User" (email,password,role) VALUES ($1, $2, $3) RETURNING *',
-        [body?.email, hashedPassword, body?.role || UserRole.ATTENDEE],
+      // Insert user into the database
+      const [newUser] = await this.entityManager.query(
+        `INSERT INTO "User" (email, password, role) VALUES ($1, $2, $3) RETURNING *`,
+        [body.email, hashedPassword, body.role || UserRole.ATTENDEE],
       );
 
-      const access_token = await this.AuthCommonServices.generateJwtToke({
-        email: body?.email,
-        id: response[0].id,
-        password: hashedPassword,
-        role: body?.role,
+      // Generate access token
+      const accessToken = await this.authCommonServices.generateJwtToke({
+        email: newUser.email,
+        id: newUser.id,
+        role: newUser.role,
+        password: newUser.password,
       });
 
-      return res.status(200).json({
-        status: 'success',
-        message: 'User created successfully',
-        user: response[0],
-        access_token,
-      });
+      return { user: newUser, access_token: accessToken };
     } catch (error) {
-      console.error('Sing Up error ---> ', error);
-      return res.status(500).json({
-        status: 'error',
-        message: 'Internal server error, please try again later.',
-      });
+      // Re-throw known NestJS exceptions
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
   }
 
-  async userLogin(req: Request, res: Response): Promise<Response> {
-    const body = req.body;
-
-    // Transform body into an instance of AuthDto and validate it
-    const AuthDto = await globalDtoHandler(LoginDto, body, res);
-    if (AuthDto) {
-      return AuthDto;
-    }
-
+  async userLogin(body: LoginDto): Promise<{ access_token: string }> {
     try {
-      const existingUser = await this.AuthCommonServices.checkUserExistByEmail(
+      const existingUser = await this.authCommonServices.checkUserExistByEmail(
         body.email,
       );
 
       if (!existingUser.email) {
-        return res.status(404).json({
-          status: 'error',
-          message: 'User does not exist. Please create an account to proceed.',
-        });
+        throw new UnauthorizedException(
+          'User does not exist. Please create an account to proceed.',
+        );
       }
 
       // Compare password
@@ -101,121 +79,79 @@ export class AuthService {
         existingUser.password,
       );
       if (!isMatch) {
-        return res.status(400).json({
-          status: 'success',
-          message: 'Invalid email or password',
-        });
+        throw new ConflictException('Invalid email or password');
       }
-      const access_token = await this.AuthCommonServices.generateJwtToke({
+      const access_token = await this.authCommonServices.generateJwtToke({
         email: existingUser.email,
         id: existingUser.id,
         password: existingUser.password,
         role: existingUser.role,
       });
 
-      // delete password from existingUser
-      delete existingUser.password;
-      return res.status(200).json({
-        status: 'success',
-        message: 'User Login successfully',
-        user: existingUser,
-        access_token,
-      });
+      return { access_token };
     } catch (error) {
-      console.error('Login error --->', error);
-      return res.status(500).json({
-        status: 'error',
-        message: 'Internal server error, please try again later.',
-      });
+      // Re-throw known NestJS exceptions
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
   }
 
-  async userForgotPasswordRequest(
-    req: Request,
-    res: Response,
-  ): Promise<Response> {
-    const body = req.body;
-
-    // Transform body into an instance of AuthDto and validate it
-    const AuthDto = await globalDtoHandler(forgotPasswordRequestDto, body, res);
-    if (AuthDto) {
-      return AuthDto;
-    }
-
+  async userOTPRequest(body: OtpDto): Promise<void> {
     const OTP = generateOtp();
 
     try {
       await this.OtpMailService.sendEmail(
         body.email,
-        'Eventra Forgot Password',
+        'Eventra Verification OTP',
         OTP,
       );
+
       await this.entityManager.query(
         'INSERT INTO "otp_validation" (email, otp) VALUES ($1, $2) ON CONFLICT (email) DO UPDATE SET otp = EXCLUDED.otp RETURNING *',
         [body.email, OTP],
       );
-
-      return res.status(200).json({
-        status: 'success',
-        message: 'OTP send successfully',
-      });
     } catch (error) {
-      console.error('send OTP error --->', error);
-      return res.status(500).json({
-        status: 'error',
-        message: 'Internal server error, please try again later.',
-      });
+      // Re-throw known NestJS exceptions
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(error.message);
     }
   }
 
-  async userPasswordChange(req: Request, res: Response): Promise<Response> {
-    const body = req.body;
-
-    // Transform body into an instance of AuthDto and validate it
-    const PasswordDto = await globalDtoHandler(PasswordChangeDto, body, res);
-    if (PasswordDto) {
-      return PasswordDto;
-    }
-
+  async userPasswordChange(body: PasswordChangeDto): Promise<void> {
     try {
+      // Fetch the OTP from the database
       const sendOtpData = await this.entityManager.query(
         'SELECT otp FROM "otp_validation" WHERE email = $1',
         [body.email],
       );
 
-      if (!sendOtpData) {
-        return res.status(500).json({
-          status: 'error',
-          message: 'Otp expired, please resend OTP',
-        });
+      if (!sendOtpData.length) {
+        throw new ConflictException(
+          'OTP expired or not found. Please request a new OTP.',
+        );
       }
 
-      if (sendOtpData[0].otp != body.otp) {
-        return res.status(500).json({
-          status: 'error',
-          message: 'Mismatch OTP',
-        });
+      if (sendOtpData[0].otp !== body.otp) {
+        throw new UnauthorizedException(
+          'Invalid OTP. Please check and try again.',
+        );
       }
 
-      // 2. Hash the password before inserting into DB
+      // Hash the password before updating the database
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(body.password, salt);
 
+      // Update the user password
       await this.entityManager.query(
         'UPDATE "User" SET password = $2 WHERE email = $1',
         [body.email, hashedPassword],
       );
-
-      return res.status(500).json({
-        status: 'success',
-        message: 'Validation successfully',
-      });
     } catch (error) {
-      console.error('Password Change error --->', error);
-      return res.status(500).json({
-        status: 'error',
-        message: 'Internal server error, please try again later.',
-      });
+      throw error;
     }
   }
 }
