@@ -17,6 +17,9 @@ import { OtpMailService } from './common/notifications/OtpNotification';
 import { AuthGuard } from './common/Guard/auth.guard';
 import { ProfileController } from './module/Profile/profile.controller';
 import { ProfileService } from './module/Profile/profile.service';
+import { CloudinaryConfig } from './config/cloudinary.config';
+import { UploadController } from './module/Upload/upload.controller';
+import { CloudinaryService } from './module/Upload/cloudinary.service';
 
 @Module({
   imports: [
@@ -40,7 +43,12 @@ import { ProfileService } from './module/Profile/profile.service';
       signOptions: { expiresIn: '30d' }, // Set expiration time for the token (1 hour)
     }), // Make JwtService available to the app
   ],
-  controllers: [AppController, AuthController, ProfileController], // Register controllers
+  controllers: [
+    AppController,
+    AuthController,
+    ProfileController,
+    UploadController,
+  ], // Register controllers
   providers: [
     AppService,
     AuthService,
@@ -48,6 +56,8 @@ import { ProfileService } from './module/Profile/profile.service';
     OtpMailService,
     ProfileService,
     AuthGuard,
+    CloudinaryConfig,
+    CloudinaryService,
   ], // Register services
 })
 export class AppModule {}
