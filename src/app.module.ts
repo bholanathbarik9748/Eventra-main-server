@@ -13,6 +13,11 @@ import { AuthService } from './module/Auth/auth.service';
 import { AuthCommonServices } from './common/services/auth.common.service';
 import { OtpMailService } from './common/notifications/OtpNotification';
 
+// import Guard
+import { AuthGuard } from './common/Guard/auth.guard';
+import { ProfileController } from './module/Profile/profile.controller';
+import { ProfileService } from './module/Profile/profile.service';
+
 @Module({
   imports: [
     ConfigModule.forRoot(), // Loads environment variables from .env
@@ -35,7 +40,14 @@ import { OtpMailService } from './common/notifications/OtpNotification';
       signOptions: { expiresIn: '30d' }, // Set expiration time for the token (1 hour)
     }), // Make JwtService available to the app
   ],
-  controllers: [AppController, AuthController], // Register controllers
-  providers: [AppService, AuthService, AuthCommonServices, OtpMailService], // Register services
+  controllers: [AppController, AuthController, ProfileController], // Register controllers
+  providers: [
+    AppService,
+    AuthService,
+    AuthCommonServices,
+    OtpMailService,
+    ProfileService,
+    AuthGuard,
+  ], // Register services
 })
 export class AppModule {}

@@ -62,10 +62,10 @@ export class AuthCommonServices {
     }
   }
 
-  async validateJwtToken(token: string): Promise<boolean> {
+  async validateJwtToken(token: string): Promise<any> {
     try {
       const decode = this.jwtService.decode(token);
-      return decode.length > 0;
+      return decode;
     } catch (error) {
       console.error('Error Validate Token --->', error);
       return false;

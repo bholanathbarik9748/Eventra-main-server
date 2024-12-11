@@ -61,7 +61,9 @@ export class AuthService {
     }
   }
 
-  async userLogin(body: LoginDto): Promise<{ access_token: string }> {
+  async userLogin(
+    body: LoginDto,
+  ): Promise<{ id: string; access_token: string }> {
     try {
       const existingUser = await this.authCommonServices.checkUserExistByEmail(
         body.email,
@@ -88,7 +90,7 @@ export class AuthService {
         role: existingUser.role,
       });
 
-      return { access_token };
+      return { id: existingUser.id, access_token };
     } catch (error) {
       // Re-throw known NestJS exceptions
       if (error instanceof HttpException) {

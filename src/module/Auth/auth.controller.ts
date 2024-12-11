@@ -20,6 +20,7 @@ export class AuthController {
       return {
         status: 'success',
         message: 'User Login successfully',
+        userId: response.id,
         access_token: response.access_token,
       };
     } catch (error) {
