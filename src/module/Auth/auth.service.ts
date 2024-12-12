@@ -29,13 +29,27 @@ export class AuthService {
       const existingUser = await this.authCommonServices.checkUserExistByEmail(
         body.email,
       );
-      if (existingUser) {
+      if (existingUser.email) {
         throw new UnauthorizedException('User already exists!');
       }
 
       // Hash the password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(body.password, salt);
+
+      // Get user Otp from database
+      const [otp] = await this.entityManager.query(
+        'SELECT * FROM "otp_validation" WHERE email = $1',
+        [body.email],
+      );
+
+      if (!otp) {
+        throw new UnauthorizedException('User exists, Please Re-send otp!');
+      }
+
+      if (otp === body.otp) {
+        throw new UnauthorizedException('Incorrect OTP !');
+      }
 
       // Insert user into the database
       const [newUser] = await this.entityManager.query(

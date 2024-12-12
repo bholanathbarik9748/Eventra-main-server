@@ -37,6 +37,10 @@ export class SignUpDto {
   })
   @IsNotEmpty({ message: 'Role is required' })
   role: UserRole;
+
+  @MinLength(6, { message: 'Otp must be 6 digit' })
+  @IsNotEmpty({ message: 'Otp is required' })
+  otp: string;
 }
 
 export class OtpDto {
