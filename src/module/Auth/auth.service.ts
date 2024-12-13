@@ -30,7 +30,7 @@ export class AuthService {
         body.email,
       );
       if (existingUser.email) {
-        throw new UnauthorizedException('User already exists!');
+        throw new UnauthorizedException(['User already exists!']);
       }
 
       // Hash the password
@@ -44,11 +44,11 @@ export class AuthService {
       );
 
       if (!otp) {
-        throw new UnauthorizedException('User exists, Please Re-send otp!');
+        throw new UnauthorizedException(['User exists, Please Re-send otp!']);
       }
 
       if (otp === body.otp) {
-        throw new UnauthorizedException('Incorrect OTP !');
+        throw new UnauthorizedException(['Incorrect OTP !']);
       }
 
       // Insert user into the database
@@ -84,9 +84,9 @@ export class AuthService {
       );
 
       if (!existingUser.email) {
-        throw new UnauthorizedException(
+        throw new UnauthorizedException([
           'User does not exist. Please create an account to proceed.',
-        );
+        ]);
       }
 
       // Compare password
@@ -152,9 +152,9 @@ export class AuthService {
       }
 
       if (sendOtpData[0].otp !== body.otp) {
-        throw new UnauthorizedException(
+        throw new UnauthorizedException([
           'Invalid OTP. Please check and try again.',
-        );
+        ]);
       }
 
       // Hash the password before updating the database

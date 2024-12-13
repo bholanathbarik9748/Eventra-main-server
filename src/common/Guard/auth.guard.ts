@@ -20,12 +20,12 @@ export class AuthGuard implements CanActivate {
     // Extract the token from headers
     const authHeader = request.headers['authorization'];
     if (!authHeader) {
-      throw new UnauthorizedException('No authorization token provided');
+      throw new UnauthorizedException(['No authorization token provided']);
     }
 
     const token = authHeader.split(' ')[1];
     if (!token) {
-      throw new UnauthorizedException('Invalid authorization token');
+      throw new UnauthorizedException(['Invalid authorization token']);
     }
 
     try {
@@ -36,7 +36,7 @@ export class AuthGuard implements CanActivate {
       );
 
       if (!userData.email) {
-        throw new UnauthorizedException('Token expired, please Login again');
+        throw new UnauthorizedException(['Token expired, please Login again']);
       }
       return true; // Allow access
     } catch (error) {
