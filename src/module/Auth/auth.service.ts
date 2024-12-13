@@ -23,7 +23,7 @@ export class AuthService {
 
   async userSignUp(
     body: SignUpDto,
-  ): Promise<{ user: any; access_token: string }> {
+  ): Promise<{ userId: string; access_token: string }> {
     try {
       // Check if user already exists
       const existingUser = await this.authCommonServices.checkUserExistByEmail(
@@ -44,7 +44,9 @@ export class AuthService {
       );
 
       if (!otp) {
-        throw new UnauthorizedException(['User exists, Please Re-send otp!']);
+        throw new UnauthorizedException([
+          'OTP expired or not found. Please request a new OTP.',
+        ]);
       }
 
       if (otp === body.otp) {
@@ -65,7 +67,7 @@ export class AuthService {
         password: newUser.password,
       });
 
-      return { user: newUser, access_token: accessToken };
+      return { userId: newUser.id, access_token: accessToken };
     } catch (error) {
       // Re-throw known NestJS exceptions
       if (error instanceof HttpException) {

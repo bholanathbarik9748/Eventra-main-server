@@ -20,8 +20,10 @@ export class AuthController {
       return {
         status: 'success',
         message: 'User Login successfully',
-        userId: response.id,
-        access_token: response.access_token,
+        data: {
+          userId: response.id,
+          access_token: response.access_token,
+        },
       };
     } catch (error) {
       console.error('/login ---->', error);
@@ -36,8 +38,10 @@ export class AuthController {
       return {
         status: 'success',
         message: 'User created successfully',
-        user: response.user,
-        access_token: response.access_token,
+        data: {
+          userId: response.userId,
+          access_token: response.access_token,
+        },
       };
     } catch (error) {
       console.error('/sign-up ---->', error);
