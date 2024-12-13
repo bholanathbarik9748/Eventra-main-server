@@ -22,6 +22,7 @@ export class AuthController {
         message: 'User Login successfully',
         data: {
           userId: response.id,
+          role: response.role,
           access_token: response.access_token,
         },
       };
@@ -40,6 +41,7 @@ export class AuthController {
         message: 'User created successfully',
         data: {
           userId: response.userId,
+          role: response.role,
           access_token: response.access_token,
         },
       };

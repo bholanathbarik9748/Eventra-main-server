@@ -23,7 +23,7 @@ export class AuthService {
 
   async userSignUp(
     body: SignUpDto,
-  ): Promise<{ userId: string; access_token: string }> {
+  ): Promise<{ userId: string; role: string; access_token: string }> {
     try {
       // Check if user already exists
       const existingUser = await this.authCommonServices.checkUserExistByEmail(
@@ -67,7 +67,11 @@ export class AuthService {
         password: newUser.password,
       });
 
-      return { userId: newUser.id, access_token: accessToken };
+      return {
+        userId: newUser.id,
+        role: newUser.role,
+        access_token: accessToken,
+      };
     } catch (error) {
       // Re-throw known NestJS exceptions
       if (error instanceof HttpException) {
@@ -79,7 +83,7 @@ export class AuthService {
 
   async userLogin(
     body: LoginDto,
-  ): Promise<{ id: string; access_token: string }> {
+  ): Promise<{ id: string; role: string; access_token: string }> {
     try {
       const existingUser = await this.authCommonServices.checkUserExistByEmail(
         body.email,
@@ -106,7 +110,7 @@ export class AuthService {
         role: existingUser.role,
       });
 
-      return { id: existingUser.id, access_token };
+      return { id: existingUser.id, role: existingUser.role, access_token };
     } catch (error) {
       // Re-throw known NestJS exceptions
       if (error instanceof HttpException) {
