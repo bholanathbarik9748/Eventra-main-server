@@ -11,10 +11,6 @@ export class CreateProfileDTO {
   @IsString()
   name: string;
 
-  @IsNotEmpty()
-  @IsEmail()
-  email: string;
-
   @IsOptional()
   phone_number: string;
 

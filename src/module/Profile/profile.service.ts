@@ -43,11 +43,10 @@ export class ProfileService {
   async createUserProfile(id: string, body: CreateProfileDTO): Promise<void> {
     try {
       await this.entityManager.query(
-        'INSERT INTO "profile" (id, name, email, phone_number, location, profile_picture,bio,date_of_birth) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+        'INSERT INTO "profile" (id, name, phone_number, location, profile_picture,bio,date_of_birth) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
         [
           id,
           body.name,
-          body.email,
           body.phone_number,
           body.location,
           body.profile_picture,
