@@ -16,6 +16,7 @@ export class UploadController {
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     const result = await this.cloudinaryService.uploadFile(file);
     return {
+      status: 'success',
       message: 'File uploaded successfully!',
       url: result.secure_url,
       publicId: result.public_id,
