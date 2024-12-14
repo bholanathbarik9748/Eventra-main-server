@@ -107,4 +107,16 @@ export class ProfileService {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async checkProfileSetup(id: string): Promise<boolean> {
+    try {
+      const response = await this.entityManager.query(
+        'SELECT * FROM "profile" WHERE id=$1',
+        [id],
+      );
+      return response.length > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

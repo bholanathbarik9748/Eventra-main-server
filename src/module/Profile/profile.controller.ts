@@ -74,4 +74,17 @@ export class ProfileController {
       throw error;
     }
   }
+
+  @Get('/check/:id')
+  async getCheckUser(@Param('id') id: string): Promise<any> {
+    try {
+      const response = await this.profileService.checkProfileSetup(id);
+      return {
+        status: 'success',
+        isProfileSetUp: response,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 }
