@@ -17,8 +17,8 @@ export class ProfileService {
   async getUserProfile(id: string): Promise<{ data: UserProfile }> {
     try {
       const response = await this.entityManager.query(
-        'SELECT * FROM "profile" WHERE id = $1',
-        [id],
+        'SELECT * FROM "profile" WHERE userid = $1 AND is_active = $2',
+        [id, true],
       );
 
       if (!response) {
@@ -43,7 +43,7 @@ export class ProfileService {
   async createUserProfile(id: string, body: CreateProfileDTO): Promise<void> {
     try {
       await this.entityManager.query(
-        'INSERT INTO "profile" (id, name, phone_number, location, profile_picture,bio,date_of_birth) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+        'INSERT INTO "profile" (userid, name, phone_number, location, profile_picture,bio,date_of_birth) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
         [
           id,
           body.name,
@@ -83,7 +83,7 @@ export class ProfileService {
       const query = `
       UPDATE "profile"
       SET ${setClause}
-      WHERE id = $1
+      WHERE userid = $1
       RETURNING *;
     `;
 
@@ -99,7 +99,7 @@ export class ProfileService {
   async deleteUserProfile(id: string): Promise<void> {
     try {
       await this.entityManager.query(
-        'UPDATE "profile" SET is_active = false WHERE id = $1',
+        'UPDATE "profile" SET is_active = false WHERE userid = $1',
         [id],
       );
     } catch (error) {
@@ -110,7 +110,7 @@ export class ProfileService {
   async checkProfileSetup(id: string): Promise<boolean> {
     try {
       const response = await this.entityManager.query(
-        'SELECT * FROM "profile" WHERE id=$1',
+        'SELECT * FROM "profile" WHERE userid=$1 AND is_active = true',
         [id],
       );
       return response.length > 0;

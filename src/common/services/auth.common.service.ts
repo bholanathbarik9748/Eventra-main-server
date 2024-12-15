@@ -12,13 +12,19 @@ export class AuthCommonServices {
 
   async checkUserExistByEmail(email: string): Promise<UserExist> {
     try {
-      const response = await this.entityManager.query(
-        'select * FROM "User" WHERE email = $1',
-        [email],
+      // Use a JOIN to fetch data from User and profile tables in one query
+      const [result] = await this.entityManager.query(
+        `
+      SELECT *
+      FROM "User" u
+      LEFT JOIN "profile" p ON p.userid = u.id
+      WHERE u.email = $1 AND p.is_active = $2
+      `,
+        [email, true],
       );
 
-      // If no user is found, return null
-      if (!response || response.length === 0) {
+      // If no user is found, return default object
+      if (!result.is_active) {
         return {
           email: '',
           id: '',
@@ -27,15 +33,17 @@ export class AuthCommonServices {
         };
       }
 
+      console.log(result);
       const data: UserExist = {
-        email: response[0].email,
-        id: response[0].id,
-        password: response[0].password,
-        role: response[0].role,
+        email: result.email,
+        id: result.userid,
+        password: result.password,
+        role: result.role,
       };
+
       return data;
     } catch (error) {
-      console.error('Error Auth Common Services ---> ', error);
+      console.error('Error in checkUserExistByEmail:', error);
       return {
         email: '',
         id: '',
