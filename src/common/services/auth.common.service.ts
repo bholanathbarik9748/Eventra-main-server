@@ -33,7 +33,6 @@ export class AuthCommonServices {
         };
       }
 
-      console.log(result);
       const data: UserExist = {
         email: result.email,
         id: result.userid,

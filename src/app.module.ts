@@ -20,6 +20,8 @@ import { ProfileService } from './module/Profile/profile.service';
 import { CloudinaryConfig } from './config/cloudinary.config';
 import { UploadController } from './module/Upload/upload.controller';
 import { CloudinaryService } from './module/Upload/cloudinary.service';
+import { EventsController } from './module/events/events.controller';
+import { EventsService } from './module/events/events.service';
 
 @Module({
   imports: [
@@ -48,6 +50,7 @@ import { CloudinaryService } from './module/Upload/cloudinary.service';
     AuthController,
     ProfileController,
     UploadController,
+    EventsController,
   ], // Register controllers
   providers: [
     AppService,
@@ -55,6 +58,7 @@ import { CloudinaryService } from './module/Upload/cloudinary.service';
     AuthCommonServices,
     OtpMailService,
     ProfileService,
+    EventsService,
     AuthGuard,
     CloudinaryConfig,
     CloudinaryService,
