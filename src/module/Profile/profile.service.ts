@@ -110,8 +110,8 @@ export class ProfileService {
   async checkProfileSetup(id: string): Promise<boolean> {
     try {
       const response = await this.entityManager.query(
-        'SELECT * FROM "profile" WHERE userid=$1 AND is_active = true',
-        [id],
+        'SELECT * FROM "profile" WHERE userid=$1 AND is_active = $2',
+        [id, true],
       );
       return response.length > 0;
     } catch (error) {
