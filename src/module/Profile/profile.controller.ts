@@ -6,18 +6,15 @@ import {
   Param,
   Patch,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { CreateProfileDTO } from './profile.dto';
-import { AuthGuard } from 'src/common/Guard/auth.guard';
 
 @Controller('/profile')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
   @Get(':id')
-  @UseGuards(AuthGuard)
   async getUserProfile(@Param('id') id: string): Promise<any> {
     try {
       const response = await this.profileService.getUserProfile(id);
@@ -31,7 +28,6 @@ export class ProfileController {
   }
 
   @Post(':id')
-  @UseGuards(AuthGuard)
   async createUserProfile(
     @Param('id') id: string,
     @Body() body: CreateProfileDTO,
@@ -48,7 +44,6 @@ export class ProfileController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard)
   async updateUserProfile(
     @Param('id') id: string,
     @Body() body: CreateProfileDTO,
@@ -65,7 +60,6 @@ export class ProfileController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard)
   async deleteUserProfile(@Param('id') id: string): Promise<any> {
     try {
       await this.profileService.deleteUserProfile(id);
