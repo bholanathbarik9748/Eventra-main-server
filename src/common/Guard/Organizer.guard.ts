@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AuthCommonServices } from '../services/auth.common.service';
+import { AuthCommonServices } from '../services/Auth.common.service';
 import { UserRole } from 'src/module/Auth/auth.enum';
 
 @Injectable()

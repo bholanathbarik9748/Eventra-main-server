@@ -10,7 +10,7 @@ import { AuthController } from './module/Auth/auth.controller';
 // Import services
 import { AppService } from './app.service';
 import { AuthService } from './module/Auth/auth.service';
-import { AuthCommonServices } from './common/services/auth.common.service';
+import { AuthCommonServices } from './common/services/Auth.common.service';
 import { OtpMailService } from './common/notifications/OtpNotification';
 
 // import Guard
@@ -22,6 +22,7 @@ import { UploadController } from './module/Upload/upload.controller';
 import { CloudinaryService } from './module/Upload/cloudinary.service';
 import { EventsController } from './module/events/events.controller';
 import { EventsService } from './module/events/events.service';
+import { TicketBookingModule } from './module/TicketBooking/ticket-booking.module';
 
 @Module({
   imports: [
@@ -43,7 +44,8 @@ import { EventsService } from './module/events/events.service';
     JwtModule.register({
       secret: process.env.JWT_SECRET, // Load JWT secret from environment
       signOptions: { expiresIn: '30d' }, // Set expiration time for the token (1 hour)
-    }), // Make JwtService available to the app
+    }),
+    TicketBookingModule, // Make JwtService available to the app
   ],
   controllers: [
     AppController,

@@ -9,7 +9,7 @@ import { OtpDto, LoginDto, PasswordChangeDto, SignUpDto } from './auth.dto';
 import { EntityManager } from 'typeorm';
 import { UserRole } from './auth.enum';
 import * as bcrypt from 'bcrypt';
-import { AuthCommonServices } from 'src/common/services/auth.common.service';
+import { AuthCommonServices } from 'src/common/services/Auth.common.service';
 import { generateOtp } from 'src/utils/generators/OtpGenerator';
 import { OtpMailService } from 'src/common/notifications/OtpNotification';
 
